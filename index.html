@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Custom Web Browser</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1a1a1a;
+            color: white;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .browser-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 15px;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .nav-button {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 10px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .nav-button:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+
+        .nav-button:disabled {
+            background: rgba(255,255,255,0.1);
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .url-bar {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid rgba(255,255,255,0.2);
+            border-radius: 25px;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            font-size: 14px;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .url-bar:focus {
+            outline: none;
+            border-color: rgba(255,255,255,0.5);
+            background: rgba(255,255,255,0.2);
+        }
+
+        .url-bar::placeholder {
+            color: rgba(255,255,255,0.7);
+        }
+
+        .go-button {
+            background: linear-gradient(45deg, #00c6ff, #0072ff);
+            border: none;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .go-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,114,255,0.4);
+        }
+
+        .iframe-container {
+            height: calc(100vh - 80px);
+            background: white;
+            position: relative;
+        }
+
+        .iframe-container iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .custom-domains {
+            position: fixed;
+            top: 90px;
+            right: 20px;
+            background: rgba(42, 42, 42, 0.95);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 15px;
+            padding: 20px;
+            max-width: 350px;
+            display: none;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .custom-domains.show {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .custom-domains h3 {
+            margin-bottom: 15px;
+            color: #00c6ff;
+            text-align: center;
+        }
+
+        .domain-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            font-size: 12px;
+        }
+
+        .domain-item:last-child {
+            border-bottom: none;
+        }
+
+        .add-domain {
+            margin-top: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .add-domain input {
+            padding: 8px 12px;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 8px;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            font-size: 12px;
+        }
+
+        .add-domain input::placeholder {
+            color: rgba(255,255,255,0.5);
+        }
+
+        .add-domain button {
+            padding: 10px;
+            background: linear-gradient(45deg, #00c6ff, #0072ff);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .add-domain button:hover {
+            transform: translateY(-1px);
+        }
+
+        .error-message {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 0, 0, 0.9);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+        }
+
+        .welcome-screen {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-align: center;
+        }
+
+        .welcome-screen h1 {
+            font-size: 3em;
+            margin-bottom: 20px;
+            animation: fadeInUp 1s ease;
+        }
+
+        .welcome-screen p {
+            font-size: 1.2em;
+            opacity: 0.8;
+            animation: fadeInUp 1s ease 0.2s both;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="browser-header">
+        <div class="nav-buttons">
+            <button class="nav-button" id="backBtn" disabled>←</button>
+            <button class="nav-button" id="forwardBtn" disabled>→</button>
+            <button class="nav-button" id="refreshBtn">⟳</button>
+        </div>
+        <input type="text" class="url-bar" id="urlBar" placeholder="Enter URL or custom domain (e.g., hello123123.com)">
+        <button class="go-button" id="goBtn">Go</button>
+        <button class="nav-button" id="domainsBtn">Domains</button>
+    </div>
+    
+    <div class="custom-domains" id="customDomains">
+        <h3>Custom Domain Mappings</h3>
+        <div id="domainList"></div>
+        <div class="add-domain">
+            <input type="text" id="newDomain" placeholder="domain.com">
+            <input type="text" id="newTarget" placeholder="http://ip:port">
+            <button onclick="addCustomDomain()">Add Domain</button>
+        </div>
+    </div>
+    
+    <div class="iframe-container" id="iframeContainer">
+        <div class="welcome-screen">
+            <h1>🌐 Custom Browser</h1>
+            <p>Enter a URL or custom domain in the address bar above</p>
+        </div>
+    </div>
+
+    <div class="error-message" id="errorMessage"></div>
+
+    <script>
+        // Custom domain mappings (stored in localStorage)
+        let customDomains = JSON.parse(localStorage.getItem('customDomains')) || {
+            'hello123123.com': 'http://192.168.1.100:8080',
+            'myapp.local': 'http://localhost:3000',
+            'testsite.dev': 'http://127.0.0.1:9000'
+        };
+
+        const urlBar = document.getElementById('urlBar');
+        const goBtn = document.getElementById('goBtn');
+        const backBtn = document.getElementById('backBtn');
+        const forwardBtn = document.getElementById('forwardBtn');
+        const refreshBtn = document.getElementById('refreshBtn');
+        const domainsBtn = document.getElementById('domainsBtn');
+        const customDomainsPanel = document.getElementById('customDomains');
+        const iframeContainer = document.getElementById('iframeContainer');
+        const errorMessage = document.getElementById('errorMessage');
+
+        let currentIframe = null;
+        let history = [];
+        let historyIndex = -1;
+
+        // Navigation functionality
+        function navigate(url) {
+            try {
+                let targetUrl = url;
+                
+                // Add protocol if missing
+                if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                    url = 'http://' + url;
+                }
+
+                // Parse URL to check for custom domain
+                const urlObj = new URL(url);
+                const hostname = urlObj.hostname;
+                
+                // Check if it's a custom domain
+                if (customDomains[hostname]) {
+                    targetUrl = customDomains[hostname] + urlObj.pathname + urlObj.search;
+                } else {
+                    targetUrl = url;
+                }
+
+                // Create new iframe
+                if (currentIframe) {
+                    currentIframe.remove();
+                }
+
+                currentIframe = document.createElement('iframe');
+                currentIframe.src = targetUrl;
+                currentIframe.style.width = '100%';
+                currentIframe.style.height = '100%';
+                currentIframe.style.border = 'none';
+                
+                // Handle iframe load errors
+                currentIframe.onerror = () => {
+                    showError('Failed to load: ' + targetUrl);
+                };
+
+                iframeContainer.innerHTML = '';
+                iframeContainer.appendChild(currentIframe);
+
+                // Update address bar
+                urlBar.value = url;
+
+                // Update history
+                if (historyIndex < history.length - 1) {
+                    history = history.slice(0, historyIndex + 1);
+                }
+                history.push(url);
+                historyIndex = history.length - 1;
+                updateNavigationButtons();
+
+            } catch (error) {
+                showError('Invalid URL: ' + url);
+            }
+        }
+
+        // Show error message
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+            setTimeout(() => {
+                errorMessage.style.display = 'none';
+            }, 3000);
+        }
+
+        // Update navigation buttons
+        function updateNavigationButtons() {
+            backBtn.disabled = historyIndex <= 0;
+            forwardBtn.disabled = historyIndex >= history.length - 1;
+        }
+
+        // Event listeners
+        goBtn.addEventListener('click', () => {
+            if (urlBar.value.trim()) {
+                navigate(urlBar.value.trim());
+            }
+        });
+
+        urlBar.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && urlBar.value.trim()) {
+                navigate(urlBar.value.trim());
+            }
+        });
+
+        backBtn.addEventListener('click', () => {
+            if (historyIndex > 0) {
+                historyIndex--;
+                navigate(history[historyIndex]);
+            }
+        });
+
+        forwardBtn.addEventListener('click', () => {
+            if (historyIndex < history.length - 1) {
+                historyIndex++;
+                navigate(history[historyIndex]);
+            }
+        });
+
+        refreshBtn.addEventListener('click', () => {
+            if (currentIframe) {
+                currentIframe.src = currentIframe.src;
+            }
+        });
+
+        domainsBtn.addEventListener('click', () => {
+            customDomainsPanel.classList.toggle('show');
+            if (customDomainsPanel.classList.contains('show')) {
+                loadCustomDomains();
+            }
+        });
+
+        // Load and display custom domains
+        function loadCustomDomains() {
+            const domainList = document.getElementById('domainList');
+            domainList.innerHTML = '';
+            
+            for (const [domain, target] of Object.entries(customDomains)) {
+                const item = document.createElement('div');
+                item.className = 'domain-item';
+                item.innerHTML = `
+                    <span><strong>${domain}</strong><br><small>${target}</small></span>
+                `;
+                domainList.appendChild(item);
+            }
+        }
+
+        // Add new custom domain
+        function addCustomDomain() {
+            const domain = document.getElementById('newDomain').value.trim();
+            const target = document.getElementById('newTarget').value.trim();
+            
+            if (domain && target) {
+                customDomains[domain] = target;
+                localStorage.setItem('customDomains', JSON.stringify(customDomains));
+                
+                document.getElementById('newDomain').value = '';
+                document.getElementById('newTarget').value = '';
+                loadCustomDomains();
+                
+                showError('Domain added: ' + domain + ' → ' + target);
+            }
+        }
+
+        // Initialize
+        loadCustomDomains();
+        updateNavigationButtons();
+
+        // Close domains panel when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!customDomainsPanel.contains(e.target) && !domainsBtn.contains(e.target)) {
+                customDomainsPanel.classList.remove('show');
+            }
+        });
+    </script>
+</body>
+</html>
