@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
     <title>Custom Web Browser</title>
     <style>
         * {
@@ -270,9 +271,10 @@
     <script>
         // Custom domain mappings (stored in localStorage)
         let customDomains = JSON.parse(localStorage.getItem('customDomains')) || {
-            'hello123123.com': 'http://13.222.189.89:9001',
-            'myapp.local': 'http://localhost:3000',
-            'testsite.dev': 'http://127.0.0.1:9000'
+            'hello123123.com': 'https://13.222.189.89:9001',
+            'myapp.local': 'https://localhost:3000',
+            'testsite.dev': 'https://127.0.0.1:9000',
+            'example.test': 'https://httpbin.org'
         };
 
         const urlBar = document.getElementById('urlBar');
