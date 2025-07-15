@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Custom Browser</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f0f0f0;
+    }
+    
+    .browser-header {
+      background: #2d2d2d;
+      padding: 10px;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    
+    .nav-buttons {
+      display: flex;
+      gap: 5px;
+    }
+    
+    .nav-button {
+      background: #4a4a4a;
+      border: none;
+      color: white;
+      padding: 8px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    
+    .nav-button:hover {
+      background: #5a5a5a;
+    }
+    
+    .nav-button:disabled {
+      background: #3a3a3a;
+      cursor: not-allowed;
+    }
+    
+    .url-bar {
+      flex: 1;
+      padding: 8px;
+      border: 1px solid #555;
+      border-radius: 4px;
+      background: white;
+      font-size: 14px;
+    }
+    
+    .go-button {
+      background: #007acc;
+      border: none;
+      color: white;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    
+    .go-button:hover {
+      background: #005a9e;
+    }
+    
+    .webview-container {
+      height: calc(100vh - 60px);
+      border: none;
+    }
+    
+    .custom-domains {
+      position: fixed;
+      top: 60px;
+      right: 10px;
+      background: white;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      padding: 10px;
+      max-width: 300px;
+      display: none;
+    }
+    
+    .custom-domains.show {
+      display: block;
+    }
+    
+    .domain-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 5px 0;
+      border-bottom: 1px solid #eee;
+    }
+    
+    .add-domain {
+      margin-top: 10px;
+      display: flex;
+      gap: 5px;
+    }
+    
+    .add-domain input {
+      flex: 1;
+      padding: 4px;
+      border: 1px solid #ccc;
+      border-radius: 2px;
+    }
+    
+    .add-domain button {
+      padding: 4px 8px;
+      background: #007acc;
+      color: white;
+      border: none;
+      border-radius: 2px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="browser-header">
+    <div class="nav-buttons">
+      <button class="nav-button" id="backBtn" disabled>←</button>
+      <button class="nav-button" id="forwardBtn" disabled>→</button>
+      <button class="nav-button" id="refreshBtn">⟳</button>
+    </div>
+    <input type="text" class="url-bar" id="urlBar" placeholder="Enter URL or custom domain (e.g., hello123123.com)">
+    <button class="go-button" id="goBtn">Go</button>
+    <button class="nav-button" id="domainsBtn">Domains</button>
+  </div>
+  
+  <div class="custom-domains" id="customDomains">
+    <h3>Custom Domain Mappings</h3>
+    <div id="domainList"></div>
+    <div class="add-domain">
+      <input type="text" id="newDomain" placeholder="domain.com">
+      <input type="text" id="newTarget" placeholder="http://ip:port">
+      <button onclick="addCustomDomain()">Add</button>
+    </div>
+  </div>
+  
+  <webview id="webview" class="webview-container" src="data:text/html,<h1>Welcome to Custom Browser</h1><p>Enter a URL or custom domain in the address bar above.</p>"></webview>
+
+  <script>
+    const { ipcRenderer } = require('electron');
+    const webview = document.getElementById('webview');
+    const urlBar = document.getElementById('urlBar');
+    const goBtn = document.getElementById('goBtn');
+    const backBtn = document.getElementById('backBtn');
+    const forwardBtn = document.getElementById('forwardBtn');
+    const refreshBtn = document.getElementById('refreshBtn');
+    const domainsBtn = document.getElementById('domainsBtn');
+    const customDomains = document.getElementById('customDomains');
+    
+    // Navigation functionality
+    async function navigate(url) {
+      try {
+        const result = await ipcRenderer.invoke('navigate', url);
+        if (result.success) {
+          urlBar.value = url;
+        } else {
+          alert('Navigation failed: ' + result.error);
+        }
+      } catch (error) {
+        alert('Error: ' + error.message);
+      }
+    }
+    
+    // Event listeners
+    goBtn.addEventListener('click', () => navigate(urlBar.value));
+    urlBar.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') navigate(urlBar.value);
+    });
+    
+    backBtn.addEventListener('click', () => webview.goBack());
+    forwardBtn.addEventListener('click', () => webview.goForward());
+    refreshBtn.addEventListener('click', () => webview.reload());
+    
+    domainsBtn.addEventListener('click', () => {
+      customDomains.classList.toggle('show');
+      if (customDomains.classList.contains('show')) {
+        loadCustomDomains();
+      }
+    });
+    
+    // Update navigation buttons
+    webview.addEventListener('dom-ready', () => {
+      backBtn.disabled = !webview.canGoBack();
+      forwardBtn.disabled = !webview.canGoForward();
+    });
+    
+    // Load and display custom domains
+    async function loadCustomDomains() {
+      const domains = await ipcRenderer.invoke('get-custom-domains');
+      const domainList = document.getElementById('domainList');
+      domainList.innerHTML = '';
+      
+      for (const [domain, target] of Object.entries(domains)) {
+        const item = document.createElement('div');
+        item.className = 'domain-item';
+        item.innerHTML = `
+          <span><strong>${domain}</strong> → ${target}</span>
+        `;
+        domainList.appendChild(item);
+      }
+    }
+    
+    // Add new custom domain
+    async function addCustomDomain() {
+      const domain = document.getElementById('newDomain').value;
+      const target = document.getElementById('newTarget').value;
+      
+      if (domain && target) {
+        await ipcRenderer.invoke('add-custom-domain', domain, target);
+        document.getElementById('newDomain').value = '';
+        document.getElementById('newTarget').value = '';
+        loadCustomDomains();
+      }
+    }
+    
+    // Load initial domains
+    loadCustomDomains();
+  </script>
+</body>
+</html>
