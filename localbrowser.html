@@ -508,7 +508,7 @@
                 </div>
                 <div class="form-group">
                     <label>Target Server:</label>
-                    <input type="text" id="formTarget" placeholder="http://12.12.12.12:8080">
+                    <input type="text" id="formTarget" placeholder="http://13.222.189.89:9001">
                 </div>
                 <button class="form-button" onclick="addPathFromForm()">Add Path</button>
             </div>
@@ -526,7 +526,7 @@
     "theareak.com": {
       "paths": {
         "/": "http://127.0.0.1:3000",
-        "/app1": "http://12.12.12.12:8080"
+        "/app1": "http://13.222.189.89:9001"
       }
     }
   }
@@ -1112,13 +1112,13 @@
         function importConfig() {
             if (confirm('Reset to embedded configuration?')) {
                 customDomains = {
-                    "hello11.com": {
+                    "theareak.com": {
                         "/": "http://127.0.0.1:3000",
-                        "/app1": "http://12.12.12.12:8080"
+                        "/app1": "http://13.222.189.89:9001"
                     },
-                    "hello12.com": {
+                    "theareak12.com": {
                         "/": "http://127.0.0.1:3000",
-                        "/app2": "http://12.12.12.12:8081"
+                        "/app2": "http://13.222.189.89:9002"
                     }
                 };
                 localStorage.setItem('customDomains', JSON.stringify(customDomains));
@@ -1138,14 +1138,14 @@
         function addExampleConfig() {
             const examples = {
                 'hello123123.com': {
-                    '/app1': 'http://12.12.12.12:8080',
-                    '/app2': 'http://12.12.12.12:8081',
-                    '/': 'http://12.12.12.12:8083'
+                    '/app1': 'http://13.222.189.89:9001',
+                    '/app2': 'http://13.222.189.89:9002',
+                    '/': 'http://13.222.189.89:9001'
                 },
                 'hello1133.com': {
-                    '/app1': 'http://12.12.12.12:8080',
-                    '/app2': 'http://12.12.12.12:8081',
-                    '/': 'http://12.12.12.12:8083'
+                    '/app1': 'http://13.222.189.90:9001',
+                    '/app2': 'http://13.222.189.90:9002',
+                    '/': 'http://13.222.189.90:9001'
                 }
             };
             

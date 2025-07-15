@@ -1,0 +1,23 @@
+{
+    "configVersion": "1.0",
+    "lastUpdated": "2025-07-15T07:02:48.491Z",
+    "totalDomains": 2,
+    "domains": {
+      "theareak.com": {
+        "domain": "theareak.com",
+        "totalPaths": 2,
+        "paths": {
+          "/": "http://127.0.0.1:3000",
+          "/app1": "http://13.222.189.89:9001"
+        }
+      },
+      "theareak12.com": {
+        "domain": "theareak12.com",
+        "totalPaths": 2,
+        "paths": {
+          "/": "http://127.0.0.1:3000",
+          "/app2": "http://13.222.189.89:9002"
+        }
+      }
+    }
+  }
